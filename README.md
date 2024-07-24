@@ -55,6 +55,13 @@ python train.py \
   --partial_sampling
 ```
 
+```bash
+python infer.py \
+  --device cuda:0 \
+  --prefix experiment1 \
+  --output_dir ./experiment1_outputs
+```
+
 ### Contributing
 
 See the [contributing guide](CONTRIBUTING.md) to get started.
