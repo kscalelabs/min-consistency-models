@@ -6,9 +6,8 @@ from typing import List
 import argparse
 import os
 
-from model import ConsistencyModel 
-from dataloader import mnist 
-from utils.kerras_boundaries import kerras_boundaries 
+from model import ConsistencyModel, kerras_boundaries
+from dataloader import mnist
 
 
 def main(args):

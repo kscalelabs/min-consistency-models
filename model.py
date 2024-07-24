@@ -111,8 +111,8 @@ class ConsistencyModel(nn.Module):
             x1 = x + z * t1[:, :, None, None]
 
             # exponential moving average model, same weights as original model
-            
-            # with ema_model, want it similar to original model's so model thus 
+
+            # with ema_model, want it similar to original model's so model thus
             # has consistent outputs for the same image sample for different time steps
             # across the flow.
             x1 = ema_model(x1, t1)
@@ -140,8 +140,20 @@ class ConsistencyModel(nn.Module):
             x = self(x, t)
 
         return x
-    
+
 
 def pseudo_huber_loss(x, y, delta=1.0):
     diff = x - y
     return torch.mean(delta**2 * (torch.sqrt(1 + (diff/delta)**2) - 1))
+
+
+def kerras_boundaries(sigma, eps, N, T):
+    # This will be used to generate the boundaries for the time discretization
+
+    return torch.tensor(
+        [
+            (eps ** (1 / sigma) + i / (N - 1) * (T ** (1 / sigma) - eps ** (1 / sigma)))
+            ** sigma
+            for i in range(N)
+        ]
+    )

@@ -1,13 +1,15 @@
+"""Defines a simple MNIST dataloader."""
+
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 
 # Define transformations for the images
 transform = transforms.Compose([
-    transforms.ToTensor(), 
-    transforms.Normalize((0.5,), (0.5,)) 
+    transforms.ToTensor(),
+    transforms.Normalize((0.5,), (0.5,))
 ])
 
-def mnist():
+def mnist() -> tuple[DataLoader, DataLoader]:
     # Download and load the training data
     train_dataset = datasets.MNIST(
         root='mnist_data',
