@@ -1,20 +1,22 @@
 import torch
 import math
-from typing import List
+from typing import List, Optional
 import torch.nn as nn
 import torch.nn.functional as F
 
-blk = lambda ic, oc: nn.Sequential(
-    nn.GroupNorm(32, num_channels=ic),
-    nn.SiLU(),
-    nn.Conv2d(ic, oc, 3, padding=1),
-    nn.GroupNorm(32, num_channels=oc),
-    nn.SiLU(),
-    nn.Conv2d(oc, oc, 3, padding=1),
-)
+
+def blk(ic, oc):
+    return nn.Sequential(
+        nn.GroupNorm(32, num_channels=ic),
+        nn.SiLU(),
+        nn.Conv2d(ic, oc, 3, padding=1),
+        nn.GroupNorm(32, num_channels=oc),
+        nn.SiLU(),
+        nn.Conv2d(oc, oc, 3, padding=1),
+    )
+
 
 class ConsistencyModel(nn.Module):
-
     def __init__(self, n_channel: int, eps: float = 0.002, D: int = 128) -> None:
         super(ConsistencyModel, self).__init__()
 
@@ -52,7 +54,7 @@ class ConsistencyModel(nn.Module):
         )
         self.last = nn.Conv2d(2 * D + n_channel, n_channel, 3, padding=1)
 
-    def forward(self, x, t) -> torch.Tensor:
+    def forward(self, x, t):
         if isinstance(t, float):
             t = (
                 torch.tensor([t] * x.shape[0], dtype=torch.float32)
@@ -101,7 +103,7 @@ class ConsistencyModel(nn.Module):
         # as time progresses want to rely more on the model's output image (likely to be more informed)
         return c_skip_t[:, :, None, None] * x_ori + c_out_t[:, :, None, None] * x
 
-    def loss(self, x, z, t1, t2, ema_model, loss_type='mse'):
+    def loss(self, x, z, t1, t2, ema_model, loss_type="mse"):
         x2 = x + z * t2[:, :, None, None]
 
         # forward pass
@@ -110,22 +112,22 @@ class ConsistencyModel(nn.Module):
         with torch.no_grad():
             x1 = x + z * t1[:, :, None, None]
 
-            # exponential moving average model, same weights as original model
+            # exponential moving average model, shared weights as original model
 
             # with ema_model, want it similar to original model's so model thus
             # has consistent outputs for the same image sample for different time steps
             # across the flow.
             x1 = ema_model(x1, t1)
 
-        if loss_type == 'mse':
+        if loss_type == "mse":
             return F.mse_loss(x1, x2)
-        elif loss_type == 'huber':
+        elif loss_type == "huber":
             return pseudo_huber_loss(x1, x2)
         else:
             raise ValueError("Invalid loss type. Choose 'mse' or 'huber'.")
 
     @torch.no_grad()
-    def sample(self, x, ts: List[float], partial_start: float = None):
+    def sample(self, x, ts: List[float], partial_start: Optional[float] = None):
         if partial_start is not None:
             # Start from a partially denoised state
             start_idx = next(i for i, t in enumerate(ts) if t <= partial_start)
@@ -145,15 +147,3 @@ class ConsistencyModel(nn.Module):
 def pseudo_huber_loss(x, y, delta=1.0):
     diff = x - y
     return torch.mean(delta**2 * (torch.sqrt(1 + (diff/delta)**2) - 1))
-
-
-def kerras_boundaries(sigma, eps, N, T):
-    # This will be used to generate the boundaries for the time discretization
-
-    return torch.tensor(
-        [
-            (eps ** (1 / sigma) + i / (N - 1) * (T ** (1 / sigma) - eps ** (1 / sigma)))
-            ** sigma
-            for i in range(N)
-        ]
-    )
