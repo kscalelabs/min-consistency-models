@@ -140,6 +140,25 @@ def main() -> None:
     logger.info("Low quality image saved as: %slow_quality_image.png", args.prefix)
     logger.info("Finished image saved as: %sfinished_image.png", args.prefix)
 
+    image, _ = next(iter(test_loader))
+    image = image[:20]
+    step_spreads = [
+        [80.0],
+        [5.0, 80.0],
+        [5.0, 50.0, 80.0],
+        [5.0, 20.0, 40.0, 80.0],
+        [5.0, 10.0, 15.0, 20.0, 30.0, 40.0, 60.0, 80.0],
+    ]
+
+    for i, steps in enumerate(step_spreads):
+        num_steps = len(steps)
+        xh = model.sample(
+            torch.randn_like(image).to(device=device) * 80.0,
+            list(reversed(steps)),
+        )
+        xh = (xh * 0.5 + 0.5).clamp(0, 1)
+        grid = make_grid(xh, nrow=4)
+        save_image(grid, os.path.join(args.output_dir, f"{args.prefix}ct_{name}_sample_{num_steps}step.png"))
 
 if __name__ == "__main__":
     main()

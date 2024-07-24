@@ -19,3 +19,4 @@ out*/
 *.stl
 mnist_data/
 contents/
+*.pth

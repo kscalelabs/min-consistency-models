@@ -142,7 +142,7 @@ class ConsistencyModel(nn.Module):
 
         # just running through the model at random timestamps until end
         # bigger jumps more unstable
-        for t in ts[1:]:
+        for t in ts:
             z = torch.randn_like(x)
             x = x + (math.sqrt(t**2 - self.eps**2) * z)
             x = self(x, t)
