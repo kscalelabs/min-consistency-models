@@ -2,7 +2,9 @@
 
 Minimal implementation of consistency models in PyTorch.
 
-This repository was the code created as a part of Nathan's talk on Flow Matching, which also leaked a bit into Consistency Modeling, and useful optimization for flow matching that reduces the number of sampling steps required in order to reach final model prediction
+This repository was the code created as a part of Nathan's talk on Flow Matching, which also leaked a bit into Consistency Modeling, a useful optimization for flow matching that reduces the number of sampling steps required in order to reach final model prediction.
+
+The key idea is moving from noisy images to non-noisy images by following a flow "path" between Gaussian noise and the target image!
 
 ## Getting Started
 
