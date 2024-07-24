@@ -138,7 +138,7 @@ class ConsistencyModel(nn.Module):
             # Start from a partially denoised state
             start_idx = next(i for i, t in enumerate(ts) if t <= partial_start)
             x = self(x, ts[start_idx])
-            ts = ts[start_idx + 1:]
+            ts = ts[start_idx + 1 :]
 
         # Just running through the model at random timestamps until end
         # Bigger jumps more unstable
