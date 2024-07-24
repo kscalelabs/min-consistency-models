@@ -1,13 +1,14 @@
 """Defines consistency model."""
 
-import torch
 import math
 from typing import List, Optional
-import torch.nn as nn
+
+import torch
 import torch.nn.functional as F
+from torch import Tensor, nn
 
 
-def blk(ic, oc):
+def blk(ic: int, oc: int) -> nn.Module:
     return nn.Sequential(
         nn.GroupNorm(32, num_channels=ic),
         nn.SiLU(),
@@ -19,50 +20,44 @@ def blk(ic, oc):
 
 
 class ConsistencyModel(nn.Module):
-    def __init__(self, n_channel: int, eps: float = 0.002, D: int = 128) -> None:
+    def __init__(self, n_channel: int, eps: float = 0.002, hdims: int = 128) -> None:
         super(ConsistencyModel, self).__init__()
 
         self.eps = eps
 
-        self.freqs = torch.exp(
-            -math.log(10000) * torch.arange(start=0, end=D, dtype=torch.float32) / D
-        )
+        self.freqs = torch.exp(-math.log(10000) * torch.arange(start=0, end=hdims, dtype=torch.float32) / hdims)
 
         self.down = nn.Sequential(
             *[
-                nn.Conv2d(n_channel, D, 3, padding=1),
-                blk(D, D),
-                blk(D, 2 * D),
-                blk(2 * D, 2 * D),
+                nn.Conv2d(n_channel, hdims, 3, padding=1),
+                blk(hdims, hdims),
+                blk(hdims, 2 * hdims),
+                blk(2 * hdims, 2 * hdims),
             ]
         )
 
         self.time_downs = nn.Sequential(
-            nn.Linear(2 * D, D),
-            nn.Linear(2 * D, D),
-            nn.Linear(2 * D, 2 * D),
-            nn.Linear(2 * D, 2 * D),
+            nn.Linear(2 * hdims, hdims),
+            nn.Linear(2 * hdims, hdims),
+            nn.Linear(2 * hdims, 2 * hdims),
+            nn.Linear(2 * hdims, 2 * hdims),
         )
 
-        self.mid = blk(2 * D, 2 * D)
+        self.mid = blk(2 * hdims, 2 * hdims)
 
         self.up = nn.Sequential(
             *[
-                blk(2 * D, 2 * D),
-                blk(2 * 2 * D, D),
-                blk(D, D),
-                nn.Conv2d(2 * D, 2 * D, 3, padding=1),
+                blk(2 * hdims, 2 * hdims),
+                blk(2 * 2 * hdims, hdims),
+                blk(hdims, hdims),
+                nn.Conv2d(2 * hdims, 2 * hdims, 3, padding=1),
             ]
         )
-        self.last = nn.Conv2d(2 * D + n_channel, n_channel, 3, padding=1)
+        self.last = nn.Conv2d(2 * hdims + n_channel, n_channel, 3, padding=1)
 
-    def forward(self, x, t):
+    def forward(self, x: Tensor, t: Tensor) -> Tensor:
         if isinstance(t, float):
-            t = (
-                torch.tensor([t] * x.shape[0], dtype=torch.float32)
-                .to(x.device)
-                .unsqueeze(1)
-            )
+            t = torch.tensor([t] * x.shape[0], dtype=torch.float32).to(x.device).unsqueeze(1)
 
         # time embedding
         args = t.float() * self.freqs[None].to(t.device)
@@ -149,3 +144,9 @@ class ConsistencyModel(nn.Module):
 def pseudo_huber_loss(x, y, delta=1.0):
     diff = x - y
     return torch.mean(delta**2 * (torch.sqrt(1 + (diff / delta) ** 2) - 1))
+
+
+def kerras_boundaries(sigma, eps, N, T) -> Tensor:
+    # This will be used to generate the boundaries for the time discretization
+    bounds = [(eps ** (1 / sigma) + i / (N - 1) * (T ** (1 / sigma) - eps ** (1 / sigma))) ** sigma for i in range(N)]
+    return torch.tensor(bounds)
