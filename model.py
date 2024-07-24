@@ -101,14 +101,14 @@ class ConsistencyModel(nn.Module):
         return c_skip_t[:, :, None, None] * x_ori + c_out_t[:, :, None, None] * x
 
     def loss(
-            self,
-            x: Tensor,
-            z: Tensor,
-            t1: Tensor,
-            t2: Tensor,
-            ema_model: nn.Module,
-            loss_type: Literal["mse", "huber"] = "mse"
-        ) -> Tensor:
+        self,
+        x: Tensor,
+        z: Tensor,
+        t1: Tensor,
+        t2: Tensor,
+        ema_model: nn.Module,
+        loss_type: Literal["mse", "huber"] = "mse",
+    ) -> Tensor:
         x2 = x + z * t2[:, :, None, None]
 
         # forward pass
@@ -144,9 +144,7 @@ class ConsistencyModel(nn.Module):
         # bigger jumps more unstable
         for t in ts[1:]:
             z = torch.randn_like(x)
-            x = x + (
-                math.sqrt(t**2 - self.eps**2) * z
-            )
+            x = x + (math.sqrt(t**2 - self.eps**2) * z)
             x = self(x, t)
 
         return x
@@ -155,6 +153,7 @@ class ConsistencyModel(nn.Module):
 def pseudo_huber_loss(x: Tensor, y: Tensor, delta: float = 1.0) -> Tensor:
     diff = x - y
     return torch.mean(delta**2 * (torch.sqrt(1 + (diff / delta) ** 2) - 1))
+
 
 def kerras_boundaries(sigma: float, eps: float, n: int, t: float) -> Tensor:
     # This will be used to generate the boundaries for the time discretization
