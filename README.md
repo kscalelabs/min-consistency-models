@@ -55,10 +55,12 @@ python train.py \
   --partial_sampling
 ```
 
+To run inference from a model checkpoint, you can use the command line as follows:
+
 ```bash
 python infer.py \
   --device cuda:0 \
-  --prefix experiment1 \
+  --prefix experiment1_ \
   --output_dir ./experiment1_outputs
 ```
 
