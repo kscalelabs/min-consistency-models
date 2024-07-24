@@ -138,11 +138,11 @@ class ConsistencyModel(nn.Module):
             # Start from a partially denoised state
             start_idx = next(i for i, t in enumerate(ts) if t <= partial_start)
             x = self(x, ts[start_idx])
-            ts = ts[start_idx:]
+            ts = ts[start_idx + 1 :]
 
-        # just running through the model at random timestamps until end
-        # bigger jumps more unstable
-        for t in ts[1:]:
+        # Just running through the model at random timestamps until end
+        # Bigger jumps more unstable
+        for t in ts:
             z = torch.randn_like(x)
             x = x + (math.sqrt(t**2 - self.eps**2) * z)
             x = self(x, t)
