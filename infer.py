@@ -8,7 +8,7 @@ import torch
 import torch.nn.functional as F
 from torch import Tensor, nn
 from torch.utils.data.dataloader import DataLoader
-from torchvision.utils import save_image
+from torchvision.utils import make_grid, save_image
 
 from dataloader import mnist
 from model import ConsistencyModel
@@ -159,6 +159,7 @@ def main() -> None:
         xh = (xh * 0.5 + 0.5).clamp(0, 1)
         grid = make_grid(xh, nrow=4)
         save_image(grid, os.path.join(args.output_dir, f"{args.prefix}ct_{name}_sample_{num_steps}step.png"))
+
 
 if __name__ == "__main__":
     main()
