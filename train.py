@@ -1,6 +1,7 @@
 """Defines the main training script."""
 
 import argparse
+import logging
 import math
 import os
 
@@ -10,6 +11,8 @@ from tqdm import tqdm
 
 from dataloader import mnist
 from model import ConsistencyModel, kerras_boundaries
+
+logger = logging.getLogger(__name__)
 
 
 def main() -> None:
@@ -34,7 +37,7 @@ def main() -> None:
     args = parser.parse_args()
 
     device = torch.device(args.device if torch.cuda.is_available() else "cpu")
-    print(f"Using device: {device}")
+    logger.info("Using device: %s", device)
 
     n_channels = 1
     name = "mnist"
@@ -52,8 +55,8 @@ def main() -> None:
     os.makedirs(args.output_dir, exist_ok=True)
 
     for epoch in range(1, args.n_epochs + 1):
-        N = math.ceil(math.sqrt((epoch * (150**2 - 4) / args.n_epochs) + 4) - 1) + 1
-        boundaries = kerras_boundaries(7.0, 0.002, N, 80.0).to(device)  # blackbox "time generator"
+        max_t = math.ceil(math.sqrt((epoch * (150**2 - 4) / args.n_epochs) + 4) - 1) + 1
+        boundaries = kerras_boundaries(7.0, 0.002, max_t, 80.0).to(device)  # blackbox "time generator"
 
         pbar = tqdm(train_loader)
         loss_ema = None
@@ -63,7 +66,7 @@ def main() -> None:
             x = x.to(device)
 
             z = torch.randn_like(x)  # random noise
-            t = torch.randint(0, N - 1, (x.shape[0], 1), device=device)
+            t = torch.randint(0, max_t - 1, (x.shape[0], 1), device=device)
             t_0 = boundaries[t]
             t_1 = boundaries[t + 1]
 
@@ -78,7 +81,7 @@ def main() -> None:
 
             optim.step()
             with torch.no_grad():
-                mu = math.exp(2 * math.log(0.95) / N)
+                mu = math.exp(2 * math.log(0.95) / max_t)
                 # update \theta_{-}
 
                 # EMA of the model's parameters

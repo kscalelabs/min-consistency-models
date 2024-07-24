@@ -1,16 +1,19 @@
 """Defines the inference script."""
 
 import argparse
+import logging
 import os
 
 import torch
 import torch.nn.functional as F
-from torch import Tensor
+from torch import Tensor, nn
 from torch.utils.data.dataloader import DataLoader
 from torchvision.utils import save_image
 
 from dataloader import mnist
 from model import ConsistencyModel
+
+logger = logging.getLogger(__name__)
 
 
 def get_low_quality_image(test_loader: DataLoader) -> tuple[Tensor, int]:
@@ -40,7 +43,13 @@ def get_low_quality_image(test_loader: DataLoader) -> tuple[Tensor, int]:
     return low_quality_image, label
 
 
-def finish_low_quality_image(model, low_quality_image, device, partial_start=40.0, steps=None) -> Tensor:
+def finish_low_quality_image(
+    model: nn.Module,
+    low_quality_image: Tensor,
+    device: torch.device,
+    partial_start: float = 40.0,
+    steps: list[float] | None = None,
+) -> Tensor:
     """Finish a low quality MNIST image using partial sampling.
 
     Args:
@@ -82,6 +91,8 @@ def finish_low_quality_image(model, low_quality_image, device, partial_start=40.
 
 
 def main() -> None:
+    logging.basicConfig(level=logging.INFO)
+
     parser = argparse.ArgumentParser(description="Consistency Model Training and Image Finishing")
     parser.add_argument("--device", type=str, default="cuda:0", help="CUDA device to use")
     parser.add_argument("--prefix", type=str, default="", help="Prefix for checkpoint and output names")
@@ -97,9 +108,9 @@ def main() -> None:
     name = "mnist"
 
     device = torch.device(args.device if torch.cuda.is_available() else "cpu")
-    print(f"Using device: {device}")
+    logger.info("Using device: %s", device)
 
-    train_loader, test_loader = mnist()
+    _, test_loader = mnist()
     model = ConsistencyModel(n_channels, hdims=128)
     model.to(device)
 
@@ -125,9 +136,9 @@ def main() -> None:
         os.path.join(args.output_dir, f"{args.prefix}finished_image.png"),
     )
 
-    print(f"Processed image with label: {label}")
-    print(f"Low quality image saved as: {args.prefix}low_quality_image.png")
-    print(f"Finished image saved as: {args.prefix}finished_image.png")
+    logger.info("Processed image with label: %s", label)
+    logger.info("Low quality image saved as: %slow_quality_image.png", args.prefix)
+    logger.info("Finished image saved as: %sfinished_image.png", args.prefix)
 
 
 if __name__ == "__main__":
