@@ -1,3 +1,5 @@
+"""Training script"""
+
 import torch
 from tqdm import tqdm
 from torchvision.utils import save_image, make_grid

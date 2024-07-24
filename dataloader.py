@@ -1,5 +1,6 @@
 """Defines a simple MNIST dataloader."""
 
+from typing import Tuple
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 
@@ -9,7 +10,7 @@ transform = transforms.Compose(
 )
 
 
-def mnist() -> tuple[DataLoader, DataLoader]:
+def mnist() -> Tuple[DataLoader, DataLoader]:
     # Download and load the training data
     train_dataset = datasets.MNIST(
         root="mnist_data", train=True, download=True, transform=transform

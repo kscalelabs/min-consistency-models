@@ -1,3 +1,5 @@
+"""Defines consistency model."""
+
 import torch
 import math
 from typing import List, Optional
@@ -146,4 +148,4 @@ class ConsistencyModel(nn.Module):
 
 def pseudo_huber_loss(x, y, delta=1.0):
     diff = x - y
-    return torch.mean(delta**2 * (torch.sqrt(1 + (diff/delta)**2) - 1))
+    return torch.mean(delta**2 * (torch.sqrt(1 + (diff / delta) ** 2) - 1))
