@@ -1,8 +1,9 @@
 """Defines a simple MNIST dataloader."""
 
 from typing import Tuple
-from torchvision import datasets, transforms
+
 from torch.utils.data import DataLoader
+from torchvision import datasets, transforms
 
 # Define transformations for the images
 transform = transforms.Compose(

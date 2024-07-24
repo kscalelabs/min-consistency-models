@@ -1,7 +1,7 @@
 """Defines consistency model."""
 
 import math
-from typing import List, Optional
+from typing import Literal
 
 import torch
 import torch.nn.functional as F
@@ -100,7 +100,15 @@ class ConsistencyModel(nn.Module):
         # as time progresses want to rely more on the model's output image (likely to be more informed)
         return c_skip_t[:, :, None, None] * x_ori + c_out_t[:, :, None, None] * x
 
-    def loss(self, x, z, t1, t2, ema_model, loss_type="mse"):
+    def loss(
+            self,
+            x: Tensor,
+            z: Tensor,
+            t1: Tensor,
+            t2: Tensor,
+            ema_model: nn.Module,
+            loss_type: Literal["mse", "huber"] = "mse"
+        ) -> Tensor:
         x2 = x + z * t2[:, :, None, None]
 
         # forward pass
@@ -116,15 +124,16 @@ class ConsistencyModel(nn.Module):
             # across the flow.
             x1 = ema_model(x1, t1)
 
-        if loss_type == "mse":
-            return F.mse_loss(x1, x2)
-        elif loss_type == "huber":
-            return pseudo_huber_loss(x1, x2)
-        else:
-            raise ValueError("Invalid loss type. Choose 'mse' or 'huber'.")
+        match loss_type:
+            case "mse":
+                return F.mse_loss(x1, x2)
+            case "huber":
+                return pseudo_huber_loss(x1, x2)
+            case _:
+                raise ValueError("Invalid loss type. Choose 'mse' or 'huber'.")
 
     @torch.no_grad()
-    def sample(self, x, ts: List[float], partial_start: Optional[float] = None):
+    def sample(self, x: Tensor, ts: list[float], partial_start: float | None = None) -> Tensor:
         if partial_start is not None:
             # Start from a partially denoised state
             start_idx = next(i for i, t in enumerate(ts) if t <= partial_start)
@@ -135,18 +144,19 @@ class ConsistencyModel(nn.Module):
         # bigger jumps more unstable
         for t in ts[1:]:
             z = torch.randn_like(x)
-            x = x + math.sqrt(t**2 - self.eps**2) * z
+            x = x + (
+                math.sqrt(t**2 - self.eps**2) * z
+            )
             x = self(x, t)
 
         return x
 
 
-def pseudo_huber_loss(x, y, delta=1.0):
+def pseudo_huber_loss(x: Tensor, y: Tensor, delta: float = 1.0) -> Tensor:
     diff = x - y
     return torch.mean(delta**2 * (torch.sqrt(1 + (diff / delta) ** 2) - 1))
 
-
-def kerras_boundaries(sigma, eps, N, T) -> Tensor:
+def kerras_boundaries(sigma: float, eps: float, n: int, t: float) -> Tensor:
     # This will be used to generate the boundaries for the time discretization
-    bounds = [(eps ** (1 / sigma) + i / (N - 1) * (T ** (1 / sigma) - eps ** (1 / sigma))) ** sigma for i in range(N)]
+    bounds = [(eps ** (1 / sigma) + i / (n - 1) * (t ** (1 / sigma) - eps ** (1 / sigma))) ** sigma for i in range(n)]
     return torch.tensor(bounds)
