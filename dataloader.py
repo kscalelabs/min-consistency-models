@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 
 
-def mnist() -> Tuple[DataLoader, DataLoader]:
+def mnist(batch_size: int = 64) -> Tuple[DataLoader, DataLoader]:
     # Define the transform for the images
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (0.5,))])
 
@@ -15,7 +15,7 @@ def mnist() -> Tuple[DataLoader, DataLoader]:
 
     train_loader = DataLoader(
         dataset=train_dataset,
-        batch_size=64,  # Set the batch size
+        batch_size=batch_size,  # Set the batch size
         shuffle=True,  # Shuffle the dataset
     )
 
@@ -31,7 +31,7 @@ def mnist() -> Tuple[DataLoader, DataLoader]:
     return train_loader, test_loader
 
 
-def cifar() -> Tuple[DataLoader, DataLoader]:
+def cifar(batch_size: int = 64) -> Tuple[DataLoader, DataLoader]:
     # Define the transforms for the images
     transform = transforms.Compose(
         [
@@ -41,7 +41,7 @@ def cifar() -> Tuple[DataLoader, DataLoader]:
     )
     # Download and load the training data
     train_dataset = datasets.CIFAR10(root="cifar_data", train=True, download=True, transform=transform)
-    train_loader = DataLoader(dataset=train_dataset, batch_size=64, shuffle=True)
+    train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
     test_dataset = datasets.CIFAR10(root="cifar_data", train=False, download=True, transform=transform)
     test_loader = DataLoader(dataset=test_dataset, batch_size=1000, shuffle=False)
 

@@ -21,6 +21,7 @@ def main() -> None:
     parser.add_argument("--dataset", type=str, default="mnist", help="Dataset to train on")
     parser.add_argument("--prefix", type=str, default="", help="Prefix for checkpoint and output names")
     parser.add_argument("--n_epochs", type=int, default=100, help="Number of epochs to train")
+    parser.add_argument("--batch_size", type=int, default=64, help="Batch size")
     parser.add_argument(
         "--output_dir",
         type=str,
@@ -44,11 +45,11 @@ def main() -> None:
     match args.dataset:
         case "mnist":
             name = "mnist"
-            train_loader, test_loader = mnist()
+            train_loader, test_loader = mnist(batch_size=args.batch_size)
             n_channels = 1
         case "cifar":
             name = "cifar"
-            train_loader, test_loader = cifar()
+            train_loader, test_loader = cifar(batch_size=args.batch_size)
             n_channels = 3
         case _:
             print(f"{args.dataset} is unsupported")
