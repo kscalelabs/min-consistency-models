@@ -1,4 +1,4 @@
-"""Defines a simple MNIST dataloader."""
+"""Defines simple dataloaders."""
 
 from typing import Tuple
 
@@ -27,5 +27,15 @@ def mnist() -> Tuple[DataLoader, DataLoader]:
         batch_size=1000,  # Set the batch size
         shuffle=False,  # No need to shuffle the test dataset
     )
+
+    return train_loader, test_loader
+
+
+def cifar() -> Tuple[DataLoader, DataLoader]:
+    # Download and load the training data
+    train_dataset = datasets.CIFAR10(root="cifar_data", train=True, download=True, transform=transform)
+    train_loader = DataLoader(dataset=train_dataset, batch_size=64, shuffle=True)
+    test_dataset = datasets.CIFAR10(root="cifar_data", train=False, download=True, transform=transform)
+    test_loader = DataLoader(dataset=test_dataset, batch_size=1000, shuffle=False)
 
     return train_loader, test_loader

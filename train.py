@@ -4,12 +4,13 @@ import argparse
 import logging
 import math
 import os
+import sys
 
 import torch
 from torchvision.utils import make_grid, save_image
 from tqdm import tqdm
 
-from dataloader import mnist
+from dataloader import *
 from model import ConsistencyModel, kerras_boundaries
 
 logger = logging.getLogger(__name__)
@@ -17,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Consistency Model Training")
+    parser.add_argument("--dataset", type=str, default="mnist", help="Dataset to train on")
     parser.add_argument("--prefix", type=str, default="", help="Prefix for checkpoint and output names")
     parser.add_argument("--n_epochs", type=int, default=100, help="Number of epochs to train")
     parser.add_argument(
@@ -40,9 +42,18 @@ def main() -> None:
     logger.info("Using device: %s", device)
 
     n_channels = 1
-    name = "mnist"
 
-    train_loader, test_loader = mnist()
+    match args.dataset:
+        case "mnist":
+            name = "mnist"
+            train_loader, test_loader = mnist()
+        case "cifar"
+            name="cifar"
+            train_loader, test_loader = cifar()
+        case _:
+            print(f"{args.dataset} is unsupported")
+            sys.exit()
+
     model = ConsistencyModel(n_channels, hdims=128)
     model.to(device)
     optim = torch.optim.AdamW(model.parameters(), lr=1e-4)
