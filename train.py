@@ -41,15 +41,15 @@ def main() -> None:
     device = torch.device(args.device if torch.cuda.is_available() else "cpu")
     logger.info("Using device: %s", device)
 
-    n_channels = 1
-
     match args.dataset:
         case "mnist":
             name = "mnist"
             train_loader, test_loader = mnist()
-        case "cifar"
-            name="cifar"
+            n_channels = 1
+        case "cifar":
+            name = "cifar"
             train_loader, test_loader = cifar()
+            n_channels = 3
         case _:
             print(f"{args.dataset} is unsupported")
             sys.exit()
