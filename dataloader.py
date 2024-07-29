@@ -5,11 +5,11 @@ from typing import Tuple
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 
-# Define transformations for the images
-transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (0.5,))])
-
 
 def mnist() -> Tuple[DataLoader, DataLoader]:
+    # Define the transform for the images
+    transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (0.5,))])
+
     # Download and load the training data
     train_dataset = datasets.MNIST(root="mnist_data", train=True, download=True, transform=transform)
 
@@ -32,6 +32,13 @@ def mnist() -> Tuple[DataLoader, DataLoader]:
 
 
 def cifar() -> Tuple[DataLoader, DataLoader]:
+    # Define the transforms for the images
+    transform = transforms.Compose(
+        [
+            transforms.ToTensor(),
+            transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),  # 3 channel
+        ]
+    )
     # Download and load the training data
     train_dataset = datasets.CIFAR10(root="cifar_data", train=True, download=True, transform=transform)
     train_loader = DataLoader(dataset=train_dataset, batch_size=64, shuffle=True)
